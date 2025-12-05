@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Historias Clínicas - Hospital</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            background: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-button.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button[type="submit"], .action-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button[type="submit"]:hover, .action-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .error {
+            background: #fee;
+            border-left-color: #f44336;
+            color: #c00;
+        }
+
+        .success {
+            background: #efe;
+            border-left-color: #4CAF50;
+            color: #2d5016;
+        }
+
+        .historia-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .historia-card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .historia-detail {
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .historia-detail strong {
+            color: #555;
+            display: inline-block;
+            width: 180px;
+        }
+
+        .doctor-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .doctor-tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .doctors-container {
+            border: 2px dashed #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .doctor-entry {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .add-doctor-btn {
+            background: #4CAF50;
+            margin-top: 10px;
+        }
+
+        .remove-doctor-btn {
+            background: #f44336;
+            padding: 6px 12px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sistema de Historias Clínicas</h1>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="showTab('consultar')">Consultar Historia</button>
+            <button class="tab-button" onclick="showTab('registrar')">Registrar Historia</button>
+            <button class="tab-button" onclick="showTab('listar')">Ver Todos</button>
+        </div>
+
+        <div id="consultar" class="tab-content active">
+            <h2>Consultar Historia Clínica por Cédula</h2>
+            <form onsubmit="consultarHistoria(event)">
+                <div class="form-group">
+                    <label for="cedula">Cédula del Paciente:</label>
+                    <input type="text" id="cedula" required placeholder="Ej: 1234567890">
+                </div>
+                <button type="submit">Consultar</button>
+            </form>
+            <div id="resultado-consulta"></div>
+        </div>
+
+        <div id="registrar" class="tab-content">
+            <h2>Registrar Nueva Historia Clínica</h2>
+            <form onsubmit="registrarHistoria(event)">
+                <div class="form-section">
+                    <h3>Información del Paciente</h3>
+                    <div class="form-group">
+                        <label for="pac_nombre">Nombre:</label>
+                        <input type="text" id="pac_nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pac_apellido">Apellido:</label>
+                        <input type="text" id="pac_apellido" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pac_cedula">Cédula:</label>
+                        <input type="text" id="pac_cedula" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pac_edad">Edad:</label>
+                        <input type="number" id="pac_edad" required min="0" max="150">
+                    </div>
+                    <div class="form-group">
+                        <label for="pac_genero">Género:</label>
+                        <select id="pac_genero" required>
+                            <option value="">Seleccione...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>Doctores que Atienden</h3>
+                    <div id="doctores-container" class="doctors-container">
+                        <div class="doctor-entry" data-index="0">
+                            <div class="form-group">
+                                <label>Nombre del Doctor:</label>
+                                <input type="text" class="doc_nombre" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Cédula Profesional:</label>
+                                <input type="text" class="doc_cedula" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Especialidad:</label>
+                                <input type="text" class="doc_especialidad" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="action-button add-doctor-btn" onclick="agregarDoctor()">+ Agregar Otro Doctor</button>
+                </div>
+
+                <div class="form-section">
+                    <h3>Detalles de la Historia Clínica</h3>
+                    <div class="form-group">
+                        <label for="motivo">Motivo de Consulta:</label>
+                        <textarea id="motivo" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="diagnostico">Diagnóstico:</label>
+                        <textarea id="diagnostico" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="tratamiento">Tratamiento:</label>
+                        <textarea id="tratamiento" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="fecha">Fecha:</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+                </div>
+
+                <button type="submit">Registrar Historia Clínica</button>
+            </form>
+            <div id="resultado-registro"></div>
+        </div>
+
+        <div id="listar" class="tab-content">
+            <h2>Todas las Historias Clínicas</h2>
+            <button class="action-button" onclick="cargarTodasHistorias()">Actualizar Lista</button>
+            <div id="resultado-listado"></div>
+        </div>
+    </div>
+
+    <script>
+        const GRAPHQL_URL = '/graphql';
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'listar') {
+                cargarTodasHistorias();
+            }
+        }
+
+        async function consultarHistoria(event) {
+            event.preventDefault();
+            const cedula = document.getElementById('cedula').value;
+            const resultDiv = document.getElementById('resultado-consulta');
+
+            resultDiv.innerHTML = '<div class="loading">Consultando...</div>';
+
+            const query = `
+                query {
+                    obtenerHistoriaClinicaPorCedula(cedula: "${cedula}") {
+                        id
+                        motivoConsulta
+                        diagnostico
+                        tratamiento
+                        fecha
+                        paciente {
+                            nombre
+                            apellido
+                            cedula
+                            edad
+                            genero
+                        }
+                        doctores {
+                            nombre
+                            cedulaProfesional
+                            especialidad
+                        }
+                    }
+                }
+            `;
+
+            try {
+                const response = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const result = await response.json();
+
+                if (result.errors) {
+                    resultDiv.innerHTML = `<div class="result error"><strong>Error:</strong> ${result.errors[0].message}</div>`;
+                } else {
+                    const historia = result.data.obtenerHistoriaClinicaPorCedula;
+                    resultDiv.innerHTML = renderHistoriaCard(historia);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error"><strong>Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        let doctorIndex = 1;
+
+        function agregarDoctor() {
+            const container = document.getElementById('doctores-container');
+            const doctorEntry = document.createElement('div');
+            doctorEntry.className = 'doctor-entry';
+            doctorEntry.dataset.index = doctorIndex++;
+            doctorEntry.innerHTML = `
+                <div class="form-group">
+                    <label>Nombre del Doctor:</label>
+                    <input type="text" class="doc_nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Cédula Profesional:</label>
+                    <input type="text" class="doc_cedula" required>
+                </div>
+                <div class="form-group">
+                    <label>Especialidad:</label>
+                    <input type="text" class="doc_especialidad" required>
+                </div>
+                <button type="button" class="action-button remove-doctor-btn" onclick="eliminarDoctor(this)">Eliminar Doctor</button>
+            `;
+            container.appendChild(doctorEntry);
+        }
+
+        function eliminarDoctor(button) {
+            button.parentElement.remove();
+        }
+
+        async function registrarHistoria(event) {
+            event.preventDefault();
+            const resultDiv = document.getElementById('resultado-registro');
+
+            resultDiv.innerHTML = '<div class="loading">Registrando...</div>';
+
+            const doctorEntries = document.querySelectorAll('.doctor-entry');
+            const doctores = Array.from(doctorEntries).map(entry => ({
+                nombre: entry.querySelector('.doc_nombre').value,
+                cedulaProfesional: entry.querySelector('.doc_cedula').value,
+                especialidad: entry.querySelector('.doc_especialidad').value
+            }));
+
+            const mutation = `
+                mutation {
+                    registrarHistoriaClinica(input: {
+                        paciente: {
+                            nombre: "${document.getElementById('pac_nombre').value}"
+                            apellido: "${document.getElementById('pac_apellido').value}"
+                            cedula: "${document.getElementById('pac_cedula').value}"
+                            edad: ${document.getElementById('pac_edad').value}
+                            genero: "${document.getElementById('pac_genero').value}"
+                        }
+                        doctores: [
+                            ${doctores.map(d => `{
+                                nombre: "${d.nombre}"
+                                cedulaProfesional: "${d.cedulaProfesional}"
+                                especialidad: "${d.especialidad}"
+                            }`).join(',')}
+                        ]
+                        motivoConsulta: "${document.getElementById('motivo').value}"
+                        diagnostico: "${document.getElementById('diagnostico').value}"
+                        tratamiento: "${document.getElementById('tratamiento').value}"
+                        fecha: "${document.getElementById('fecha').value}"
+                    }) {
+                        id
+                        motivoConsulta
+                        diagnostico
+                        tratamiento
+                        fecha
+                        paciente {
+                            nombre
+                            apellido
+                            cedula
+                            edad
+                            genero
+                        }
+                        doctores {
+                            nombre
+                            cedulaProfesional
+                            especialidad
+                        }
+                    }
+                }
+            `;
+
+            try {
+                const response = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: mutation })
+                });
+
+                const result = await response.json();
+
+                if (result.errors) {
+                    resultDiv.innerHTML = `<div class="result error"><strong>Error:</strong> ${result.errors[0].message}</div>`;
+                } else {
+                    const historia = result.data.registrarHistoriaClinica;
+                    resultDiv.innerHTML = `
+                        <div class="result success">
+                            <strong>Historia clínica registrada exitosamente</strong>
+                        </div>
+                        ${renderHistoriaCard(historia)}
+                    `;
+                    event.target.reset();
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error"><strong>Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        async function cargarTodasHistorias() {
+            const resultDiv = document.getElementById('resultado-listado');
+            resultDiv.innerHTML = '<div class="loading">Cargando...</div>';
+
+            const query = `
+                query {
+                    obtenerTodasHistoriasClinicas {
+                        id
+                        motivoConsulta
+                        diagnostico
+                        tratamiento
+                        fecha
+                        paciente {
+                            nombre
+                            apellido
+                            cedula
+                            edad
+                            genero
+                        }
+                        doctores {
+                            nombre
+                            cedulaProfesional
+                            especialidad
+                        }
+                    }
+                }
+            `;
+
+            try {
+                const response = await fetch(GRAPHQL_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const result = await response.json();
+
+                if (result.errors) {
+                    resultDiv.innerHTML = `<div class="result error"><strong>Error:</strong> ${result.errors[0].message}</div>`;
+                } else {
+                    const historias = result.data.obtenerTodasHistoriasClinicas;
+                    if (historias.length === 0) {
+                        resultDiv.innerHTML = '<div class="result">No hay historias clínicas registradas</div>';
+                    } else {
+                        resultDiv.innerHTML = historias.map(h => renderHistoriaCard(h)).join('');
+                    }
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="result error"><strong>Error:</strong> ${error.message}</div>`;
+            }
+        }
+
+        function renderHistoriaCard(historia) {
+            const fecha = new Date(historia.fecha).toLocaleDateString('es-ES');
+            return `
+                <div class="historia-card">
+                    <h3>Historia Clínica #${historia.id}</h3>
+                    <div class="historia-detail">
+                        <strong>Paciente:</strong> ${historia.paciente.nombre} ${historia.paciente.apellido}
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Cédula:</strong> ${historia.paciente.cedula}
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Edad:</strong> ${historia.paciente.edad} años
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Género:</strong> ${historia.paciente.genero}
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Fecha:</strong> ${fecha}
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Motivo de Consulta:</strong> ${historia.motivoConsulta}
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Diagnóstico:</strong> ${historia.diagnostico}
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Tratamiento:</strong> ${historia.tratamiento}
+                    </div>
+                    <div class="historia-detail">
+                        <strong>Doctores:</strong>
+                        <div class="doctor-list">
+                            ${historia.doctores.map(d => `
+                                <div class="doctor-tag">${d.nombre} - ${d.especialidad}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('fecha').valueAsDate = new Date();
+    </script>
+</body>
+</html>

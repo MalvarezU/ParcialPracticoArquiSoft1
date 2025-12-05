@@ -1,0 +1,32 @@
+{
+  "name": "hospital-graphql-api",
+  "version": "1.0.0",
+  "description": "Servicio GraphQL para gestión de historias clínicas",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "seed": "node src/seeders/seed.js"
+  },
+  "keywords": [
+    "graphql",
+    "mysql",
+    "sequelize",
+    "apollo-server",
+    "hospital"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "apollo-server-express": "^3.13.0",
+    "express": "^4.18.2",
+    "graphql": "^16.8.1",
+    "mysql2": "^3.6.5",
+    "sequelize": "^6.35.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
