@@ -1,4 +1,5 @@
 const { Paciente, Doctor, HistoriaClinica } = require('../models');
+const { formatDate, formatReadableDate, formatDateOnly, parseDate, isValidDate } = require('../utils/dateFormatter');
 
 const resolvers = {
   Query: {
@@ -84,6 +85,17 @@ const resolvers = {
       try {
         const { paciente: pacienteInput, doctores: doctoresInput, motivoConsulta, diagnostico, tratamiento, fecha } = input;
 
+        // Validar y parsear la fecha si se proporciona
+        let fechaProcesada = null;
+        if (fecha) {
+          fechaProcesada = parseDate(fecha);
+          if (!fechaProcesada) {
+            throw new Error('Formato de fecha inválido. Use formatos: YYYY-MM-DD, DD/MM/YYYY, o formato ISO');
+          }
+        } else {
+          fechaProcesada = new Date();
+        }
+
         let paciente = await Paciente.findOne({
           where: { cedula: pacienteInput.cedula }
         });
@@ -117,7 +129,7 @@ const resolvers = {
           motivoConsulta,
           diagnostico,
           tratamiento,
-          fecha: fecha || new Date(),
+          fecha: fechaProcesada,
           pacienteId: paciente.id
         });
 
@@ -146,10 +158,13 @@ const resolvers = {
 
   HistoriaClinica: {
     fecha: (historiaClinica) => {
-      if (historiaClinica.fecha instanceof Date) {
-        return historiaClinica.fecha.toISOString();
-      }
-      return historiaClinica.fecha;
+      return formatDate(historiaClinica.fecha);
+    },
+    createdAt: (historiaClinica) => {
+      return formatDate(historiaClinica.createdAt);
+    },
+    updatedAt: (historiaClinica) => {
+      return formatDate(historiaClinica.updatedAt);
     },
 
     paciente: async (historiaClinica) => {
@@ -182,6 +197,21 @@ const resolvers = {
           }
         ]
       });
+    },
+    createdAt: (paciente) => {
+      return formatDate(paciente.createdAt);
+    },
+    updatedAt: (paciente) => {
+      return formatDate(paciente.updatedAt);
+    }
+  },
+
+  Doctor: {
+    createdAt: (doctor) => {
+      return formatDate(doctor.createdAt);
+    },
+    updatedAt: (doctor) => {
+      return formatDate(doctor.updatedAt);
     }
   }
 };
