@@ -5,7 +5,7 @@ const formatLocalDate = (date) => {
   if (!date) return null;
   const d = new Date(date);
   
-  // Formato: YYYY-MM-DDTHH:mm:ss (hora local sin .000Z)
+  // Formato: YYYY-MM-DDTHH:mm:ss
   const pad = (n) => n.toString().padStart(2, '0');
   
   const year = d.getFullYear();
@@ -208,7 +208,6 @@ const resolvers = {
           ]
         });
 
-        // Formatear la respuesta del mutation también
         return {
           ...historiaCompleta.toJSON(),
           fecha: formatLocalDate(historiaCompleta.fecha),
@@ -231,7 +230,6 @@ const resolvers = {
     }
   },
 
-  // Resolvers para tipos específicos (field resolvers)
   HistoriaClinica: {
     fecha: (historiaClinica) => {
       return formatLocalDate(historiaClinica.fecha);
