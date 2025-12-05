@@ -567,7 +567,21 @@
         }
 
         function renderHistoriaCard(historia) {
-            const fecha = new Date(historia.fecha).toLocaleDateString('es-ES');
+            let fecha = 'Fecha no disponible';
+            try {
+                if (historia.fecha) {
+                    const fechaObj = new Date(historia.fecha);
+                    if (!isNaN(fechaObj.getTime())) {
+                        fecha = fechaObj.toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing date:', e);
+            }
             return `
                 <div class="historia-card">
                     <h3>Historia Clínica #${historia.id}</h3>

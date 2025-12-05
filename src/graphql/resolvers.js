@@ -145,6 +145,13 @@ const resolvers = {
   },
 
   HistoriaClinica: {
+    fecha: (historiaClinica) => {
+      if (historiaClinica.fecha instanceof Date) {
+        return historiaClinica.fecha.toISOString();
+      }
+      return historiaClinica.fecha;
+    },
+
     paciente: async (historiaClinica) => {
       if (historiaClinica.paciente) {
         return historiaClinica.paciente;
