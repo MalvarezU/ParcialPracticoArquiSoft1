@@ -1,6 +1,9 @@
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
+
+  scalar Date
+  
   type Paciente {
     id: ID!
     nombre: String!
@@ -9,8 +12,8 @@ const typeDefs = gql`
     edad: Int!
     genero: String!
     historiaClinica: HistoriaClinica
-    createdAt: String!
-    updatedAt: String!
+    createdAt: Date!
+    updatedAt: Date!
   }
 
   type Doctor {
@@ -18,8 +21,8 @@ const typeDefs = gql`
     nombre: String!
     cedulaProfesional: String!
     especialidad: String!
-    createdAt: String!
-    updatedAt: String!
+    createdAt: Date!
+    updatedAt: Date!
   }
 
   type HistoriaClinica {
@@ -27,11 +30,11 @@ const typeDefs = gql`
     motivoConsulta: String!
     diagnostico: String!
     tratamiento: String!
-    fecha: String!
+    fecha: Date!
     paciente: Paciente!
     doctores: [Doctor!]!
-    createdAt: String!
-    updatedAt: String!
+    createdAt: Date!
+    updatedAt: Date!
   }
 
   input PacienteInput {
@@ -54,7 +57,7 @@ const typeDefs = gql`
     motivoConsulta: String!
     diagnostico: String!
     tratamiento: String!
-    fecha: String
+    fecha: Date
   }
 
   type Query {
