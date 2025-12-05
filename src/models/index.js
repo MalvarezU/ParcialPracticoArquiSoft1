@@ -33,10 +33,26 @@ Doctor.belongsToMany(HistoriaClinica, {
 
 const syncDatabase = async (force = false) => {
   try {
+    console.log('Sincronizando base de datos...');
+    
+    if (force) {
+      console.log('Modo force: true - se eliminarán datos existentes');
+      await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
+    }
     await sequelize.sync({ force });
+    
+    if (force) {
+      await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+    }
+    
     console.log('✓ Base de datos sincronizada correctamente');
   } catch (error) {
     console.error('✗ Error al sincronizar la base de datos:', error);
+    
+    try {
+      await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
+    } catch (e) {
+    }
     throw error;
   }
 };
