@@ -1,4 +1,12 @@
-# Sistema de Gestión de Historias Clínicas - GraphQL API
+  # Sistema de Gestión de Historias Clínicas - GraphQL API
+
+![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4.18.2-000000?style=for-the-badge&logo=express&logoColor=white)
+![GraphQL](https://img.shields.io/badge/GraphQL-16.8.1-E10098?style=for-the-badge&logo=graphql&logoColor=white)
+![Apollo Server](https://img.shields.io/badge/Apollo%20Server-3.13.0-311C87?style=for-the-badge&logo=apollo-graphql&logoColor=white)
+![Sequelize](https://img.shields.io/badge/Sequelize-6.35.2-52B0E7?style=for-the-badge&logo=sequelize&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-20+-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
 Servicio web desarrollado con GraphQL para la gestión de historias clínicas básicas de pacientes en un hospital. Proyecto desarrollado para el Parcial Práctico de Arquitectura de Software.
 
