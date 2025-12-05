@@ -18,6 +18,18 @@ const formatLocalDate = (date) => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
 };
 
+const extractData = (obj) => {
+  if (!obj) return null;
+  
+  // Si ya es un objeto plano, devolverlo
+  if (obj && typeof obj.toJSON !== 'function') {
+    return obj;
+  }
+  
+  // Si es un objeto Sequelize, extraer los datos
+  return obj.toJSON ? obj.toJSON() : obj;
+};
+
 const resolvers = {
   Query: {
     obtenerHistoriaClinicaPorCedula: async (_, { cedula }) => {
@@ -47,17 +59,23 @@ const resolvers = {
           throw new Error(`El paciente con cédula ${cedula} no tiene historia clínica registrada`);
         }
 
+        // Extraer datos de la historia clínica
+        const historiaData = extractData(paciente.historiaClinica);
+        
         // Formatear todas las fechas
         const historiaFormateada = {
-          ...paciente.historiaClinica.toJSON(),
-          fecha: formatLocalDate(paciente.historiaClinica.fecha),
-          createdAt: formatLocalDate(paciente.historiaClinica.createdAt),
-          updatedAt: formatLocalDate(paciente.historiaClinica.updatedAt),
-          doctores: paciente.historiaClinica.doctores.map(doctor => ({
-            ...doctor.toJSON(),
-            createdAt: formatLocalDate(doctor.createdAt),
-            updatedAt: formatLocalDate(doctor.updatedAt)
-          }))
+          ...historiaData,
+          fecha: formatLocalDate(historiaData.fecha),
+          createdAt: formatLocalDate(historiaData.createdAt),
+          updatedAt: formatLocalDate(historiaData.updatedAt),
+          doctores: (historiaData.doctores || []).map(doctor => {
+            const doctorData = extractData(doctor);
+            return {
+              ...doctorData,
+              createdAt: formatLocalDate(doctorData.createdAt),
+              updatedAt: formatLocalDate(doctorData.updatedAt)
+            };
+          })
         };
 
         return historiaFormateada;
@@ -78,18 +96,22 @@ const resolvers = {
         });
         
         // Formatear fechas para pacientes
-        return pacientes.map(paciente => ({
-          ...paciente.toJSON(),
-          createdAt: formatLocalDate(paciente.createdAt),
-          updatedAt: formatLocalDate(paciente.updatedAt),
-          // También formatear en historia clínica si existe
-          historiaClinica: paciente.historiaClinica ? {
-            ...paciente.historiaClinica.toJSON(),
-            fecha: formatLocalDate(paciente.historiaClinica.fecha),
-            createdAt: formatLocalDate(paciente.historiaClinica.createdAt),
-            updatedAt: formatLocalDate(paciente.historiaClinica.updatedAt)
-          } : null
-        }));
+        return pacientes.map(paciente => {
+          const pacienteData = extractData(paciente);
+          
+          return {
+            ...pacienteData,
+            createdAt: formatLocalDate(pacienteData.createdAt),
+            updatedAt: formatLocalDate(pacienteData.updatedAt),
+            // También formatear en historia clínica si existe
+            historiaClinica: pacienteData.historiaClinica ? {
+              ...extractData(pacienteData.historiaClinica),
+              fecha: formatLocalDate(pacienteData.historiaClinica.fecha),
+              createdAt: formatLocalDate(pacienteData.historiaClinica.createdAt),
+              updatedAt: formatLocalDate(pacienteData.historiaClinica.updatedAt)
+            } : null
+          };
+        });
       } catch (error) {
         throw new Error(`Error al obtener pacientes: ${error.message}`);
       }
@@ -99,11 +121,14 @@ const resolvers = {
       try {
         const doctores = await Doctor.findAll();
         // Formatear fechas para doctores
-        return doctores.map(doctor => ({
-          ...doctor.toJSON(),
-          createdAt: formatLocalDate(doctor.createdAt),
-          updatedAt: formatLocalDate(doctor.updatedAt)
-        }));
+        return doctores.map(doctor => {
+          const doctorData = extractData(doctor);
+          return {
+            ...doctorData,
+            createdAt: formatLocalDate(doctorData.createdAt),
+            updatedAt: formatLocalDate(doctorData.updatedAt)
+          };
+        });
       } catch (error) {
         throw new Error(`Error al obtener doctores: ${error.message}`);
       }
@@ -126,24 +151,31 @@ const resolvers = {
         });
         
         // Formatear fechas para historias clínicas
-        return historias.map(historia => ({
-          ...historia.toJSON(),
-          fecha: formatLocalDate(historia.fecha),
-          createdAt: formatLocalDate(historia.createdAt),
-          updatedAt: formatLocalDate(historia.updatedAt),
-          // También formatear en paciente asociado
-          paciente: historia.paciente ? {
-            ...historia.paciente.toJSON(),
-            createdAt: formatLocalDate(historia.paciente.createdAt),
-            updatedAt: formatLocalDate(historia.paciente.updatedAt)
-          } : null,
-          // Formatear doctores asociados
-          doctores: historia.doctores ? historia.doctores.map(doctor => ({
-            ...doctor.toJSON(),
-            createdAt: formatLocalDate(doctor.createdAt),
-            updatedAt: formatLocalDate(doctor.updatedAt)
-          })) : []
-        }));
+        return historias.map(historia => {
+          const historiaData = extractData(historia);
+          
+          return {
+            ...historiaData,
+            fecha: formatLocalDate(historiaData.fecha),
+            createdAt: formatLocalDate(historiaData.createdAt),
+            updatedAt: formatLocalDate(historiaData.updatedAt),
+            // También formatear en paciente asociado
+            paciente: historiaData.paciente ? {
+              ...extractData(historiaData.paciente),
+              createdAt: formatLocalDate(historiaData.paciente.createdAt),
+              updatedAt: formatLocalDate(historiaData.paciente.updatedAt)
+            } : null,
+            // Formatear doctores asociados
+            doctores: (historiaData.doctores || []).map(doctor => {
+              const doctorData = extractData(doctor);
+              return {
+                ...doctorData,
+                createdAt: formatLocalDate(doctorData.createdAt),
+                updatedAt: formatLocalDate(doctorData.updatedAt)
+              };
+            })
+          };
+        });
       } catch (error) {
         throw new Error(`Error al obtener historias clínicas: ${error.message}`);
       }
@@ -208,21 +240,28 @@ const resolvers = {
           ]
         });
 
+        // Extraer datos
+        const historiaData = extractData(historiaCompleta);
+        
+        // Formatear la respuesta del mutation también
         return {
-          ...historiaCompleta.toJSON(),
-          fecha: formatLocalDate(historiaCompleta.fecha),
-          createdAt: formatLocalDate(historiaCompleta.createdAt),
-          updatedAt: formatLocalDate(historiaCompleta.updatedAt),
-          paciente: historiaCompleta.paciente ? {
-            ...historiaCompleta.paciente.toJSON(),
-            createdAt: formatLocalDate(historiaCompleta.paciente.createdAt),
-            updatedAt: formatLocalDate(historiaCompleta.paciente.updatedAt)
+          ...historiaData,
+          fecha: formatLocalDate(historiaData.fecha),
+          createdAt: formatLocalDate(historiaData.createdAt),
+          updatedAt: formatLocalDate(historiaData.updatedAt),
+          paciente: historiaData.paciente ? {
+            ...extractData(historiaData.paciente),
+            createdAt: formatLocalDate(historiaData.paciente.createdAt),
+            updatedAt: formatLocalDate(historiaData.paciente.updatedAt)
           } : null,
-          doctores: historiaCompleta.doctores.map(doctor => ({
-            ...doctor.toJSON(),
-            createdAt: formatLocalDate(doctor.createdAt),
-            updatedAt: formatLocalDate(doctor.updatedAt)
-          }))
+          doctores: (historiaData.doctores || []).map(doctor => {
+            const doctorData = extractData(doctor);
+            return {
+              ...doctorData,
+              createdAt: formatLocalDate(doctorData.createdAt),
+              updatedAt: formatLocalDate(doctorData.updatedAt)
+            };
+          })
         };
       } catch (error) {
         throw new Error(`Error al registrar historia clínica: ${error.message}`);
@@ -237,18 +276,22 @@ const resolvers = {
     
     paciente: async (historiaClinica) => {
       if (historiaClinica.paciente) {
+        const pacienteData = extractData(historiaClinica.paciente);
         return {
-          ...historiaClinica.paciente.toJSON(),
-          createdAt: formatLocalDate(historiaClinica.paciente.createdAt),
-          updatedAt: formatLocalDate(historiaClinica.paciente.updatedAt)
+          ...pacienteData,
+          createdAt: formatLocalDate(pacienteData.createdAt),
+          updatedAt: formatLocalDate(pacienteData.updatedAt)
         };
       }
       const paciente = await Paciente.findByPk(historiaClinica.pacienteId);
-      return paciente ? {
-        ...paciente.toJSON(),
-        createdAt: formatLocalDate(paciente.createdAt),
-        updatedAt: formatLocalDate(paciente.updatedAt)
-      } : null;
+      if (!paciente) return null;
+      
+      const pacienteData = extractData(paciente);
+      return {
+        ...pacienteData,
+        createdAt: formatLocalDate(pacienteData.createdAt),
+        updatedAt: formatLocalDate(pacienteData.updatedAt)
+      };
     },
     
     doctores: async (historiaClinica) => {
@@ -259,26 +302,32 @@ const resolvers = {
         doctores = await historiaClinica.getDoctores();
       }
       
-      return doctores.map(doctor => ({
-        ...doctor.toJSON(),
-        createdAt: formatLocalDate(doctor.createdAt),
-        updatedAt: formatLocalDate(doctor.updatedAt)
-      }));
+      return (doctores || []).map(doctor => {
+        const doctorData = extractData(doctor);
+        return {
+          ...doctorData,
+          createdAt: formatLocalDate(doctorData.createdAt),
+          updatedAt: formatLocalDate(doctorData.updatedAt)
+        };
+      });
     }
   },
 
   Paciente: {
     historiaClinica: async (paciente) => {
-      if (paciente.historiaClinica !== undefined) {
-        return paciente.historiaClinica ? {
-          ...paciente.historiaClinica.toJSON(),
-          fecha: formatLocalDate(paciente.historiaClinica.fecha),
-          createdAt: formatLocalDate(paciente.historiaClinica.createdAt),
-          updatedAt: formatLocalDate(paciente.historiaClinica.updatedAt)
+      const pacienteData = extractData(paciente);
+      
+      if (pacienteData.historiaClinica !== undefined) {
+        return pacienteData.historiaClinica ? {
+          ...extractData(pacienteData.historiaClinica),
+          fecha: formatLocalDate(pacienteData.historiaClinica.fecha),
+          createdAt: formatLocalDate(pacienteData.historiaClinica.createdAt),
+          updatedAt: formatLocalDate(pacienteData.historiaClinica.updatedAt)
         } : null;
       }
+      
       const historia = await HistoriaClinica.findOne({
-        where: { pacienteId: paciente.id },
+        where: { pacienteId: pacienteData.id },
         include: [
           {
             model: Doctor,
@@ -288,17 +337,23 @@ const resolvers = {
         ]
       });
       
-      return historia ? {
-        ...historia.toJSON(),
-        fecha: formatLocalDate(historia.fecha),
-        createdAt: formatLocalDate(historia.createdAt),
-        updatedAt: formatLocalDate(historia.updatedAt),
-        doctores: historia.doctores.map(doctor => ({
-          ...doctor.toJSON(),
-          createdAt: formatLocalDate(doctor.createdAt),
-          updatedAt: formatLocalDate(doctor.updatedAt)
-        }))
-      } : null;
+      if (!historia) return null;
+      
+      const historiaData = extractData(historia);
+      return {
+        ...historiaData,
+        fecha: formatLocalDate(historiaData.fecha),
+        createdAt: formatLocalDate(historiaData.createdAt),
+        updatedAt: formatLocalDate(historiaData.updatedAt),
+        doctores: (historiaData.doctores || []).map(doctor => {
+          const doctorData = extractData(doctor);
+          return {
+            ...doctorData,
+            createdAt: formatLocalDate(doctorData.createdAt),
+            updatedAt: formatLocalDate(doctorData.updatedAt)
+          };
+        })
+      };
     }
   }
 };
